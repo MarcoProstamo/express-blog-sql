@@ -9,7 +9,17 @@ const postController = {
     });
   },
   show(req, res) {
-    res.send(`Showing post with ID ${req.params.id}`);
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(500).json({ error: "Bad Request" });
+
+    const sql = "SELECT * FROM post.posts WHERE id = ?";
+    connection.query(sql, [id], (err, data) => {
+      if (err) return res.status(500).json({ error: err?.sqlMessage });
+      if (data.length === 0)
+        return res.status(404).json({ error: "Post Not Found" });
+
+      res.json(data);
+    });
   },
   create(req, res) {
     res.send("Creating a new post");
