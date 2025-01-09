@@ -24,33 +24,24 @@ const postController = {
   },
 
   create(req, res) {
-    console.log(req.body);
-
     const { title, content, image } = req.body;
     if (!title || !content || !image) {
       return res.status(400).json({ error: "Bad Request" });
     }
 
-    // Insert the new post
     const insertSql =
       "INSERT INTO `post`.`posts` (`title`, `content`, `image`) VALUES (?, ?, ?)";
     connection.query(insertSql, [title, content, image], (err, data) => {
-      if (err) {
-        return res.status(500).json({ error: err?.sqlMessage });
-      }
+      if (err) return res.status(500).json({ error: err?.sqlMessage });
 
-      // If no rows were affected, return 404
-      if (data.affectedRows === 0) {
+      if (data.affectedRows === 0)
         return res.status(404).json({ error: "Post Not Created" });
-      }
 
       // Fetch all posts and return the response
       const selectSql = "SELECT * FROM post.posts";
       connection.query(selectSql, (err, data) => {
-        if (err) {
-          return res.status(500).json({ error: err?.sqlMessage });
-        }
-        // Send the created posts list as a response
+        if (err) return res.status(500).json({ error: err?.sqlMessage });
+
         res.status(201).json(data);
       });
     });
@@ -68,13 +59,24 @@ const postController = {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(500).json({ error: "Bad Request" });
 
-    const sql = "DELETE FROM post.posts WHERE id = ?";
-    connection.query(sql, [id], (err, data) => {
+    const destroySql = "DELETE FROM post.posts WHERE id = ?";
+    connection.query(destroySql, [id], (err, data) => {
       if (err) return res.status(500).json({ error: err?.sqlMessage });
-      if (data.length === 0)
-        return res.status(404).json({ error: "Post Not Found" });
 
-      res.status(204);
+      if (data.affectedRows === 0)
+        return res.status(404).json({ error: "Post Not Destroyed" });
+
+      // Fetch all posts and return the response
+      const selectSql = "SELECT * FROM post.posts";
+      connection.query(selectSql, (err, data) => {
+        if (err) return res.status(500).json({ error: err?.sqlMessage });
+
+        // Not Works as intended
+        // res.status(204).json(data);
+
+        // Works but not as intended
+        res.json(data);
+      });
     });
   },
 };
