@@ -1,6 +1,12 @@
+import { connection } from "../connections/connections.js";
+
 const postController = {
   index(req, res) {
-    res.send("Listing all posts");
+    const sql = "SELECT * FROM post.posts";
+    connection.query(sql, (err, data) => {
+      if (err) return res.status(500).json({ error: err?.sqlMessage });
+      res.json(data);
+    });
   },
   show(req, res) {
     res.send(`Showing post with ID ${req.params.id}`);
