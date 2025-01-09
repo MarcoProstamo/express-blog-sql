@@ -13,13 +13,19 @@ const postController = {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "Bad Request" });
 
-    const sql = "SELECT * FROM post.posts WHERE id = ?";
-    connection.query(sql, [id], (err, data) => {
+    const showSql = "SELECT * FROM post.posts WHERE id = ?";
+    connection.query(showSql, [id], (err, data) => {
       if (err) return res.status(500).json({ error: err?.sqlMessage });
       if (data.length === 0)
         return res.status(404).json({ error: "Post Not Found" });
 
-      res.json(data);
+      const showTagsSql =
+        "SELECT tags.label FROM post.posts INNER JOIN post_tag ON posts.id = post_tag.post_id INNER JOIN tags ON tags.id = post_tag.tag_id WHERE posts.id = ?";
+      connection.query(showTagsSql, [id], (err, tags) => {
+        if (err) return res.status(500).json({ error: err?.sqlMessage });
+        const newData = data.map((dato) => ({ ...dato, tag: tags }));
+        res.json(newData);
+      });
     });
   },
 
